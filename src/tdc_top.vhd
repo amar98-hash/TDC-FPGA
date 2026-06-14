@@ -1,89 +1,64 @@
+----------------------------------------------------------------------------------
+-- Project Name : RedPitaya-TDC
+-- File Name    : top.vhd
+-- Module Name  : top
+--
+-- Author       : Amar Dadel
+----------------------------------------------------------------------------------
+-- Description:
+--   Top-level module for the RedPitaya-TDC project.
+--
+--   This initial implementation instantiates a parameterizable
+--   carry-chain delay line. The trigger signal launches a transition
+--   into the delay chain, while the photon signal asynchronously
+--   captures the instantaneous phase state of the delay taps.
+--
+-- Revision History:
+--   -------------------------------------------------------------------
+--   Version    Date          Description
+--   -------------------------------------------------------------------
+--   0.1        14-Jun-2026   Initial top-level implementation.
+--
+----------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
 
-entity tdc_top is
+entity top is
     generic (
-        DATA_WIDTH : integer := 32
+        N_CARRY4 : integer := 2
     );
     port (
-        clk   : in  std_logic;
-        rst   : in  std_logic;
+        ----------------------------------------------------------------
+        -- Inputs
+        ----------------------------------------------------------------
+        TRIGGER_I : in  std_logic;
+        PHOTON_I  : in  std_logic;
 
-        start : in  std_logic;
-        done  : out std_logic;
-
-        x_in  : in  std_logic_vector(DATA_WIDTH-1 downto 0);
-        y_out : out std_logic_vector(DATA_WIDTH-1 downto 0)
+        ----------------------------------------------------------------
+        -- Outputs
+        ----------------------------------------------------------------
+        PERIOD_O  : out std_logic_vector(4*N_CARRY4-1 downto 0);
+        PHASE_O   : out std_logic_vector(4*N_CARRY4-1 downto 0)
     );
-end entity tdc_top;
+end entity top;
 
-architecture rtl of tdc_top is
-
-    type state_t is (
-        IDLE,
-        LOAD,
-        COMPUTE,
-        WRITEBACK,
-        FINISH
-    );
-
-    signal state      : state_t := IDLE;
-    signal x_reg      : std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
-    signal y_reg      : std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
-    signal cycle_count : unsigned(7 downto 0) := (others => '0');
+architecture rtl of top is
 
 begin
 
-    y_out <= y_reg;
-
-    process(clk)
-    begin
-        if rising_edge(clk) then
-
-            if rst = '1' then
-                state       <= IDLE;
-                x_reg       <= (others => '0');
-                y_reg       <= (others => '0');
-                cycle_count <= (others => '0');
-                done        <= '0';
-
-            else
-                done <= '0';
-
-                case state is
-
-                    when IDLE =>
-                        cycle_count <= (others => '0');
-
-                        if start = '1' then
-                            state <= LOAD;
-                        end if;
-
-                    when LOAD =>
-                        x_reg <= x_in;
-                        state <= COMPUTE;
-
-                    when COMPUTE =>
-                        -- Placeholder for LQCD stencil / CG / matrix-vector core
-                        -- For now, simply pass x_reg through after a few cycles.
-                        cycle_count <= cycle_count + 1;
-
-                        if cycle_count = 4 then
-                            y_reg <= x_reg;
-                            state <= WRITEBACK;
-                        end if;
-
-                    when WRITEBACK =>
-                        state <= FINISH;
-
-                    when FINISH =>
-                        done  <= '1';
-                        state <= IDLE;
-
-                end case;
-            end if;
-        end if;
-    end process;
+    --------------------------------------------------------------------
+    -- Delay Chain
+    --------------------------------------------------------------------
+    U_DELAY_CHAIN : entity work.delay_chain
+        generic map (
+            N_CARRY4 => N_CARRY4
+        )
+        port map (
+            TRIGGER_I    => TRIGGER_I,
+            PHOTON_I     => PHOTON_I,
+            PERIOD_REG_O => PERIOD_O,
+            PHASE_REG_O  => PHASE_O
+        );
 
 end architecture rtl;
