@@ -1,0 +1,25 @@
+# Generated Vivado project
+tdc/
+
+# Vivado logs/journals
+*.jou
+*.log
+*.str
+
+# Vivado generated directories
+.cache/
+.hw/
+.ip_user_files/
+.sim/
+.runs/
+
+# Xilinx temporary files
+.Xil/
+
+# Vivado webtalk
+*.wdb
+*.wcfg
+*.wpc
+
+# Generated project info
+build_scripts/project_info.bat
