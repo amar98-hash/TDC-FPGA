@@ -3,13 +3,22 @@
 set project_name "tdc"
 set project_dir  "../tdc"
 
+# Board repository path (relative to this script)
+set board_repo [file normalize "../board_files"]
+set_param board.repoPaths [list $board_repo]
+
+
 # Use FPGA part directly
-set fpga_part  "xc7z020clg400-1"
+set fpga_part  "xc7z010clg400-1"
 
-# Optional board part. Leave empty if not using board files.
-set board_part "" 
-#set board_part "redpitaya.com:redpitaya:part0:1.0"
 
+# Edit board choices
+set board_redpitaya        "redpitaya.com:redpitaya:part0:1.1"
+set board_zybo_z7          "digilentinc.com:zybo:part0:1.0"
+
+#set board part
+##set board_part $board_redpitaya  #use board part here.
+set board_part $board_zybo_z7  
 
 
 set top_module   "tdc_top"

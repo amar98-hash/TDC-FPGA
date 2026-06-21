@@ -1,15 +1,19 @@
 # General Vivado project generator
 
+#current directory.
 set script_dir [file dirname [file normalize [info script]]]
 cd $script_dir
 
 source ./project_config.tcl
 
-create_project $project_name $project_dir -part $fpga_part -force
-
-if {$board_part ne ""} {
+#set either FPGA part or board files in board_files directory.
+if {$board_part eq ""} {
+    create_project $project_name $project_dir -part $fpga_part -force
+} else {
+    create_project $project_name $project_dir -force
     set_property board_part $board_part [current_project]
 }
+
 
 set_property target_language $target_language [current_project]
 set_property simulator_language $simulator_language [current_project]
